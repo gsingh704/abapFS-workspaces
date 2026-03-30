@@ -1,10 +1,10 @@
 {
   "name": "abapfs-workspaces",
-  "displayName": "ABAP Remote FS Workspaces",
+  "displayName": "ABAP FS Workspaces",
   "description": "Manage Remote ABAP connections as Workspaces",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.110.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
@@ -15,59 +15,70 @@
     "SAP",
     "remote"
   ],
+    "author": {
+    "name": "Gurjant Singh",
+    "email": "gurjant.dev@gmail.com",
+    "url": "https://gurjant.fyi"
+  },
+   "repository": {
+    "type": "git",
+    "url": "https://github.com/gsingh704/abapFS-workspaces"
+  },
+  "icon": "media/icon.png",
   "main": "./src/extension.js",
+  "license": "MIT",
   "contributes": {
     "commands": [
       {
         "command": "abapFS-workspaces.workspaceManager",
         "title": "Workspace Manager",
-        "category": "ABAP Remote FS Workspaces",
+        "category": "ABAP FS Workspaces",
         "icon": "$(files)"
       },
       {
         "command": "abapFS-workspaces.openAbapFsConnectionManager",
         "title": "Open ABAP FS Connection Manager",
-        "category": "ABAP Remote FS Workspaces",
+        "category": "ABAP FS Workspaces",
         "icon": "$(settings-gear)"
       },
       {
         "command": "abapFS-workspaces.refreshWorkspaceList",
         "title": "Refresh Workspace List",
-        "category": "ABAP Remote FS Workspaces",
+        "category": "ABAP FS Workspaces",
         "icon": "$(refresh)"
       },
       {
         "command": "abapFS-workspaces.openConnectionWorkspace",
         "title": "Open Connection Workspace",
-        "category": "ABAP Remote FS Workspaces",
+        "category": "ABAP FS Workspaces",
         "icon": "$(folder-opened)"
       },
       {
         "command": "abapFS-workspaces.openConnectionWorkspaceInNewWindow",
         "title": "Open Connection Workspace In New Window",
-        "category": "ABAP Remote FS Workspaces",
+        "category": "ABAP FS Workspaces",
         "icon": "$(link-external)"
       },
       {
         "command": "abapFS-workspaces.editConnectionWorkspaceFile",
         "title": "Edit Connection Workspace File",
-        "category": "ABAP Remote FS Workspaces",
+        "category": "ABAP FS Workspaces",
         "icon": "$(edit)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "abapRemoteFsWorkspaces",
-          "title": "ABAP Workspaces",
+          "id": "abapFsWorkspaces",
+          "title": "ABAP FS Workspaces",
           "icon": "$(folder-library)"
         }
       ]
     },
     "views": {
-      "abapRemoteFsWorkspaces": [
+      "abapFsWorkspaces": [
         {
-          "id": "abapRemoteFsWorkspaces.workspaceList",
+          "id": "abapFsWorkspaces.workspaceList",
           "name": "Connection Workspaces",
           "icon": "$(folder-opened)"
         }
@@ -83,12 +94,12 @@
         {
           "command": "abapFS-workspaces.openConnectionWorkspaceInNewWindow",
           "group": "inline@1",
-          "when": "view == abapRemoteFsWorkspaces.workspaceList && viewItem == workspaceConnection"
+          "when": "view == abapFsWorkspaces.workspaceList && viewItem == workspaceConnection"
         },
         {
           "command": "abapFS-workspaces.editConnectionWorkspaceFile",
           "group": "inline@2",
-          "when": "view == abapRemoteFsWorkspaces.workspaceList && viewItem == workspaceConnection"
+          "when": "view == abapFsWorkspaces.workspaceList && viewItem == workspaceConnection"
         }
       ],
       "view/title": [
@@ -100,24 +111,24 @@
         {
           "command": "abapFS-workspaces.openAbapFsConnectionManager",
           "group": "navigation@-1",
-          "when": "view == abapRemoteFsWorkspaces.workspaceList && abapFS-workspaces.hasAbapFsConnectionManager"
+          "when": "view == abapFsWorkspaces.workspaceList && abapFS-workspaces.hasAbapFsConnectionManager"
         },
         {
           "command": "abapFS-workspaces.refreshWorkspaceList",
           "group": "navigation",
-          "when": "view == abapRemoteFsWorkspaces.workspaceList"
+          "when": "view == abapFsWorkspaces.workspaceList"
         },
         {
           "command": "abapFS-workspaces.workspaceManager",
           "group": "navigation@1",
-          "when": "view == abapRemoteFsWorkspaces.workspaceList"
+          "when": "view == abapFsWorkspaces.workspaceList"
         }
       ]
     },
     "configuration": {
       "title": "ABAP Remote FS Workspaces",
       "properties": {
-        "abapRemoteFsWorkspaces.manager": {
+        "abapFsWorkspaces.manager": {
           "type": "object",
           "default": {
             "storagePath": "",

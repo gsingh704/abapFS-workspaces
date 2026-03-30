@@ -29,7 +29,7 @@ function activate(context) {
   void updateAbapFsCommandContext();
 
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('abapRemoteFsWorkspaces.workspaceList', workspaceListProvider),
+    vscode.window.registerTreeDataProvider('abapFsWorkspaces.workspaceList', workspaceListProvider),
     workspaceListProvider,
     vscode.commands.registerCommand(`${EXTENSION_PREFIX}.workspaceManager`, () => openWorkspaceManager()),
     vscode.commands.registerCommand(`${EXTENSION_PREFIX}.openAbapFsConnectionManager`, async () => {

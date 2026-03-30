@@ -4,7 +4,7 @@ const vscode = require('vscode');
 const { renderWorkspaceManagerView } = require('./view/workspaceManagerView');
 
 const EXTENSION_PREFIX = 'abapFS-workspaces';
-const CONFIG_ROOT = 'abapRemoteFsWorkspaces';
+const CONFIG_ROOT = 'abapFsWorkspaces';
 const WORKSPACE_MANAGER_KEY = 'manager';
 const LEGACY_CONFIG_ROOT = 'abapfs';
 const LEGACY_WORKSPACE_MANAGER_KEY = 'workspaceManager';
