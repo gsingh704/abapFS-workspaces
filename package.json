@@ -1,5 +1,5 @@
 {
-  "name": "abap-remote-fs-workspaces",
+  "name": "abapfs-workspaces",
   "displayName": "ABAP Remote FS Workspaces",
   "description": "Manage Remote ABAP connections as Workspaces",
   "version": "0.0.1",
@@ -9,13 +9,165 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
-  "main": "./extension.js",
+  "keywords": [
+    "ABAP",
+    "workspace",
+    "SAP",
+    "remote"
+  ],
+  "main": "./src/extension.js",
   "contributes": {
-    "commands": [{
-      "command": "abap-remote-fs-workspaces.helloWorld",
-      "title": "Hello World"
-    }]
+    "commands": [
+      {
+        "command": "abapFS-workspaces.workspaceManager",
+        "title": "Workspace Manager",
+        "category": "ABAP Remote FS Workspaces",
+        "icon": "$(files)"
+      },
+      {
+        "command": "abapFS-workspaces.openAbapFsConnectionManager",
+        "title": "Open ABAP FS Connection Manager",
+        "category": "ABAP Remote FS Workspaces",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "abapFS-workspaces.refreshWorkspaceList",
+        "title": "Refresh Workspace List",
+        "category": "ABAP Remote FS Workspaces",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "abapFS-workspaces.openConnectionWorkspace",
+        "title": "Open Connection Workspace",
+        "category": "ABAP Remote FS Workspaces",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "abapFS-workspaces.openConnectionWorkspaceInNewWindow",
+        "title": "Open Connection Workspace In New Window",
+        "category": "ABAP Remote FS Workspaces",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "abapFS-workspaces.editConnectionWorkspaceFile",
+        "title": "Edit Connection Workspace File",
+        "category": "ABAP Remote FS Workspaces",
+        "icon": "$(edit)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "abapRemoteFsWorkspaces",
+          "title": "ABAP Workspaces",
+          "icon": "$(folder-library)"
+        }
+      ]
+    },
+    "views": {
+      "abapRemoteFsWorkspaces": [
+        {
+          "id": "abapRemoteFsWorkspaces.workspaceList",
+          "name": "Connection Workspaces",
+          "icon": "$(folder-opened)"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "abapFS-workspaces.openConnectionWorkspace",
+          "group": "inline@1",
+          "when": "view == abapfs.connections && viewItem =~ /connection-(global|workspace)$/"
+        },
+        {
+          "command": "abapFS-workspaces.openConnectionWorkspaceInNewWindow",
+          "group": "inline@1",
+          "when": "view == abapRemoteFsWorkspaces.workspaceList && viewItem == workspaceConnection"
+        },
+        {
+          "command": "abapFS-workspaces.editConnectionWorkspaceFile",
+          "group": "inline@2",
+          "when": "view == abapRemoteFsWorkspaces.workspaceList && viewItem == workspaceConnection"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "abapFS-workspaces.workspaceManager",
+          "group": "navigation@100",
+          "when": "view == abapfs.connections"
+        },
+        {
+          "command": "abapFS-workspaces.openAbapFsConnectionManager",
+          "group": "navigation@-1",
+          "when": "view == abapRemoteFsWorkspaces.workspaceList && abapFS-workspaces.hasAbapFsConnectionManager"
+        },
+        {
+          "command": "abapFS-workspaces.refreshWorkspaceList",
+          "group": "navigation",
+          "when": "view == abapRemoteFsWorkspaces.workspaceList"
+        },
+        {
+          "command": "abapFS-workspaces.workspaceManager",
+          "group": "navigation@1",
+          "when": "view == abapRemoteFsWorkspaces.workspaceList"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ABAP Remote FS Workspaces",
+      "properties": {
+        "abapRemoteFsWorkspaces.manager": {
+          "type": "object",
+          "default": {
+            "storagePath": "",
+            "globalFolders": [],
+            "connections": {}
+          },
+          "scope": "machine",
+          "description": "Workspace Manager configuration for generated per-connection workspace files. Connections are read from abapfs.remote.",
+          "properties": {
+            "storagePath": {
+              "type": "string",
+              "default": "",
+              "description": "Absolute folder path where generated .code-workspace files are written."
+            },
+            "globalFolders": {
+              "type": "array",
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "description": "Folders included in every generated workspace."
+            },
+            "connections": {
+              "type": "object",
+              "default": {},
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "workspaceName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Workspace file name without extension. Defaults to the connection name."
+                  },
+                  "folders": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Folders included only in this connection workspace."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
   },
   "scripts": {
     "lint": "eslint .",
