@@ -49,22 +49,112 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "abapFS-workspaces.generateWorkspaceFiles",
+        "title": "Generate Or Regenerate Workspaces",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(run-all)"
+      },
+      {
         "command": "abapFS-workspaces.openConnectionWorkspace",
-        "title": "Open Connection Workspace",
+        "title": "Open Generated Workspace",
         "category": "ABAP FS Workspaces",
         "icon": "$(folder-opened)"
       },
       {
         "command": "abapFS-workspaces.openConnectionWorkspaceInNewWindow",
-        "title": "Open Connection Workspace In New Window",
+        "title": "Open Generated Workspace In New Window",
         "category": "ABAP FS Workspaces",
         "icon": "$(link-external)"
       },
       {
         "command": "abapFS-workspaces.editConnectionWorkspaceFile",
-        "title": "Edit Connection Workspace File",
+        "title": "Edit Generated Workspace File",
         "category": "ABAP FS Workspaces",
         "icon": "$(edit)"
+      },
+      {
+        "command": "abapFS-workspaces.selectStoragePath",
+        "title": "Choose Workspace Save Location",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(folder-library)"
+      },
+      {
+        "command": "abapFS-workspaces.clearStoragePath",
+        "title": "Clear Workspace Save Location",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "abapFS-workspaces.addGlobalFolder",
+        "title": "Add Global Folder",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "abapFS-workspaces.removeGlobalFolder",
+        "title": "Remove Global Folder",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(close)"
+      },
+      {
+        "command": "abapFS-workspaces.addCustomWorkspace",
+        "title": "Add Custom Workspace",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(folder-library)"
+      },
+      {
+        "command": "abapFS-workspaces.editCustomWorkspaceName",
+        "title": "Edit Custom Workspace Name",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "abapFS-workspaces.removeCustomWorkspace",
+        "title": "Remove Custom Workspace",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "abapFS-workspaces.addCustomWorkspaceConnection",
+        "title": "Add Connection To Custom Workspace",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "abapFS-workspaces.removeCustomWorkspaceConnection",
+        "title": "Remove Connection From Custom Workspace",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(close)"
+      },
+      {
+        "command": "abapFS-workspaces.addCustomWorkspaceFolder",
+        "title": "Add Folder To Custom Workspace",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "abapFS-workspaces.removeCustomWorkspaceFolder",
+        "title": "Remove Folder From Custom Workspace",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(close)"
+      },
+      {
+        "command": "abapFS-workspaces.editConnectionWorkspaceName",
+        "title": "Edit Connection Workspace Name",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "abapFS-workspaces.addConnectionFolder",
+        "title": "Add Connection Folder",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "abapFS-workspaces.removeConnectionFolder",
+        "title": "Remove Connection Folder",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(close)"
       }
     ],
     "viewsContainers": {
@@ -79,8 +169,13 @@
     "views": {
       "abapFsWorkspaces": [
         {
+          "id": "abapFsWorkspaces.workspaceManager",
+          "name": "Workspace Manager",
+          "icon": "$(settings-gear)"
+        },
+        {
           "id": "abapFsWorkspaces.workspaceList",
-          "name": "Connection Workspaces",
+          "name": "Generated Workspaces",
           "icon": "$(folder-opened)"
         }
       ]
@@ -101,6 +196,91 @@
           "command": "abapFS-workspaces.editConnectionWorkspaceFile",
           "group": "inline@2",
           "when": "view == abapFsWorkspaces.workspaceList && viewItem == workspaceConnection"
+        },
+        {
+          "command": "abapFS-workspaces.selectStoragePath",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerStoragePath"
+        },
+        {
+          "command": "abapFS-workspaces.clearStoragePath",
+          "group": "inline@2",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerStoragePath"
+        },
+        {
+          "command": "abapFS-workspaces.addGlobalFolder",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerGlobalFoldersRoot"
+        },
+        {
+          "command": "abapFS-workspaces.removeGlobalFolder",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerGlobalFolder"
+        },
+        {
+          "command": "abapFS-workspaces.addCustomWorkspace",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerCustomWorkspacesRoot"
+        },
+        {
+          "command": "abapFS-workspaces.editCustomWorkspaceName",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerCustomWorkspace"
+        },
+        {
+          "command": "abapFS-workspaces.addCustomWorkspaceConnection",
+          "group": "inline@2",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerCustomWorkspace"
+        },
+        {
+          "command": "abapFS-workspaces.addCustomWorkspaceFolder",
+          "group": "inline@3",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerCustomWorkspace"
+        },
+        {
+          "command": "abapFS-workspaces.removeCustomWorkspace",
+          "group": "inline@4",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerCustomWorkspace"
+        },
+        {
+          "command": "abapFS-workspaces.removeCustomWorkspaceConnection",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerCustomWorkspaceConnection"
+        },
+        {
+          "command": "abapFS-workspaces.removeCustomWorkspaceFolder",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerCustomWorkspaceFolder"
+        },
+        {
+          "command": "abapFS-workspaces.editConnectionWorkspaceName",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnection"
+        },
+        {
+          "command": "abapFS-workspaces.addConnectionFolder",
+          "group": "inline@2",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnection"
+        },
+        {
+          "command": "abapFS-workspaces.removeConnectionFolder",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnectionFolder"
+        },
+        {
+          "command": "abapFS-workspaces.openConnectionWorkspace",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && (viewItem == managerConnection || viewItem == managerCustomWorkspace || viewItem == managerGeneratedFile)"
+        },
+        {
+          "command": "abapFS-workspaces.openConnectionWorkspaceInNewWindow",
+          "group": "inline@2",
+          "when": "view == abapFsWorkspaces.workspaceManager && (viewItem == managerConnection || viewItem == managerCustomWorkspace || viewItem == managerGeneratedFile)"
+        },
+        {
+          "command": "abapFS-workspaces.editConnectionWorkspaceFile",
+          "group": "inline@3",
+          "when": "view == abapFsWorkspaces.workspaceManager && (viewItem == managerConnection || viewItem == managerCustomWorkspace || viewItem == managerGeneratedFile)"
         }
       ],
       "view/title": [
@@ -113,6 +293,41 @@
           "command": "abapFS-workspaces.openAbapFsConnectionManager",
           "group": "navigation@-1",
           "when": "view == abapFsWorkspaces.workspaceList && abapFS-workspaces.hasAbapFsConnectionManager"
+        },
+        {
+          "command": "abapFS-workspaces.generateWorkspaceFiles",
+          "group": "navigation@-3",
+          "when": "view == abapFsWorkspaces.workspaceManager"
+        },
+        {
+          "command": "abapFS-workspaces.selectStoragePath",
+          "group": "navigation@-2",
+          "when": "view == abapFsWorkspaces.workspaceManager"
+        },
+        {
+          "command": "abapFS-workspaces.addGlobalFolder",
+          "group": "navigation@-1",
+          "when": "view == abapFsWorkspaces.workspaceManager"
+        },
+        {
+          "command": "abapFS-workspaces.addCustomWorkspace",
+          "group": "navigation",
+          "when": "view == abapFsWorkspaces.workspaceManager"
+        },
+        {
+          "command": "abapFS-workspaces.generateWorkspaceFiles",
+          "group": "navigation@-2",
+          "when": "view == abapFsWorkspaces.workspaceList"
+        },
+        {
+          "command": "abapFS-workspaces.openAbapFsConnectionManager",
+          "group": "navigation@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && abapFS-workspaces.hasAbapFsConnectionManager"
+        },
+        {
+          "command": "abapFS-workspaces.refreshWorkspaceList",
+          "group": "navigation@2",
+          "when": "view == abapFsWorkspaces.workspaceManager"
         },
         {
           "command": "abapFS-workspaces.refreshWorkspaceList",
@@ -134,10 +349,11 @@
           "default": {
             "storagePath": "",
             "globalFolders": [],
-            "connections": {}
+            "connections": {},
+            "workspaces": []
           },
           "scope": "machine",
-          "description": "Workspace Manager configuration for generated per-connection workspace files. Connections are read from abapfs.remote.",
+          "description": "Workspace Manager configuration for generated ABAP workspace files. Connections are read from abapfs.remote.",
           "properties": {
             "storagePath": {
               "type": "string",
@@ -174,6 +390,43 @@
                 },
                 "additionalProperties": false
               }
+            },
+            "workspaces": {
+              "type": "array",
+              "default": [],
+              "description": "Custom generated workspaces that can include multiple ABAP FS connections and local folders.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Stable internal identifier for the custom workspace entry."
+                  },
+                  "workspaceName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Workspace file name without extension."
+                  },
+                  "connectionIds": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "ABAP FS connection IDs to include in this generated workspace."
+                  },
+                  "folders": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Local folders included only in this custom generated workspace."
+                  }
+                },
+                "additionalProperties": false
+              }
             }
           },
           "additionalProperties": false
@@ -193,5 +446,8 @@
     "eslint": "^9.39.3",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.41"
   }
 }

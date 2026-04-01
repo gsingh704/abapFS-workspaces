@@ -2,16 +2,19 @@
 
 Manage Remote ABAP connections as reusable VS Code workspaces.
 
-This extension reads your configured `abapfs.remote` connections, generates one `.code-workspace` file per connection, and gives you a dedicated view to open, refresh, and maintain those workspaces.
+This extension reads your configured `abapfs.remote` connections, generates standalone `.code-workspace` files, and gives you native VS Code sidebar views to open, refresh, and maintain them.
 
 ## Features
 
 - Shows all detected ABAP Remote FS connections in a dedicated Activity Bar view.
+- Provides a native `Workspace Manager` sidebar view built from VS Code tree items, input boxes, quick picks, and folder pickers.
 - Generates a standalone `.code-workspace` file for each connection.
+- Lets you create custom workspaces that include multiple ABAP FS connections in one `.code-workspace` file.
 - Opens a connection workspace in the current window or a new window.
 - Lets you define a custom workspace file name per connection.
 - Supports shared local folders included in every generated workspace.
 - Supports connection-specific local folders added only to selected workspaces.
+- Supports custom workspace-specific local folders for grouped workspaces.
 - Lets you open and edit an already generated workspace file directly.
 - Detects the ABAP Remote FS connection manager command and links to it when available.
 - Validates paths, duplicate workspace names, and Windows-invalid file names before generating files.
@@ -20,9 +23,9 @@ This extension reads your configured `abapfs.remote` connections, generates one 
 
 Each generated workspace includes:
 
-- The remote ABAP connection as an `adt://<connection>` folder.
+- One or more remote ABAP connections as `adt://<connection>` folders.
 - Any global local folders you want in every workspace.
-- Any local folders assigned only to that connection.
+- Any local folders assigned only to that generated workspace.
 
 This makes it easy to keep one VS Code workspace per SAP system or client, while still attaching related local project folders.
 
@@ -39,12 +42,11 @@ Important limitation:
 ## Usage
 
 1. Configure your ABAP connections in `abapfs.remote`.
-2. Open the `ABAP FS Workspaces` view from the Activity Bar.
-3. Run `Workspace Manager`.
-4. Choose a save location for generated `.code-workspace` files.
-5. Optionally add global folders and per-connection folders.
-6. Save the configuration to generate workspace files.
-7. Open a generated connection workspace from the tree view.
+2. Open the `ABAP FS Workspaces` container from the Activity Bar.
+3. Use the `Workspace Manager` sidebar view to choose a save location, add global folders, configure per-connection names and folders, and manage grouped workspaces.
+4. Use the inline actions or context menu on tree items to edit names, add folders, and manage grouped workspace connections.
+5. Run `Generate Or Regenerate Workspaces` from the view title bar when you want to write or refresh the `.code-workspace` files.
+6. Open a generated workspace from either the `Workspace Manager` or `Generated Workspaces` view.
 
 ## Commands
 
@@ -59,7 +61,7 @@ The extension contributes these commands:
 
 ## Configuration
 
-The extension stores its settings in `abapFsWorkspaces.manager`.
+This extension stores its settings in `abapFsWorkspaces.manager`.
 
 ```json
 {
@@ -79,6 +81,20 @@ The extension stores its settings in `abapFsWorkspaces.manager`.
 				"workspaceName": "QAS200",
 				"folders": []
 			}
+		},
+		"workspaces": [
+			{
+				"id": "dev-qas",
+				"workspaceName": "DEV-QAS",
+				"connectionIds": [
+					"DEV100",
+					"QAS200"
+				],
+				"folders": [
+					"C:\\Projects\\cross-system-tools"
+				]
+			}
+		]
 		}
 	}
 }
@@ -87,9 +103,12 @@ The extension stores its settings in `abapFsWorkspaces.manager`.
 ### Setting Reference
 
 - `storagePath`: Absolute folder where generated `.code-workspace` files are written.
-- `globalFolders`: Local folders included in every generated workspace.
+- `globalFolders`: Local folders included in every generated workspace file.
 - `connections.<id>.workspaceName`: Optional workspace file name without the `.code-workspace` extension.
 - `connections.<id>.folders`: Local folders included only for that connection.
+- `workspaces[].workspaceName`: Required file name for a custom grouped workspace.
+- `workspaces[].connectionIds`: One or more ABAP FS connection IDs included in the grouped workspace.
+- `workspaces[].folders`: Local folders included only in that grouped workspace.
 
 ## Generated Workspace Example
 
@@ -101,10 +120,14 @@ The extension stores its settings in `abapFsWorkspaces.manager`.
 			"uri": "adt://dev100"
 		},
 		{
+			"name": "QAS200(ABAP)",
+			"uri": "adt://qas200"
+		},
+		{
 			"path": "C:\\Projects\\shared-tools"
 		},
 		{
-			"path": "C:\\Projects\\dev100-local"
+			"path": "C:\\Projects\\cross-system-tools"
 		}
 	]
 }
