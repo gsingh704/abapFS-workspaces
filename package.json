@@ -27,6 +27,9 @@
   },
   "icon": "media/icon.png",
   "main": "./src/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "license": "MIT",
   "contributes": {
     "commands": [
@@ -145,6 +148,18 @@
         "icon": "$(edit)"
       },
       {
+        "command": "abapFS-workspaces.editConnectionColor",
+        "title": "Edit Connection Color",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "abapFS-workspaces.editConnectionBadge",
+        "title": "Edit Connection Icon",
+        "category": "ABAP FS Workspaces",
+        "icon": "$(symbol-misc)"
+      },
+      {
         "command": "abapFS-workspaces.addConnectionFolder",
         "title": "Add Connection Folder",
         "category": "ABAP FS Workspaces",
@@ -258,9 +273,29 @@
           "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnection"
         },
         {
-          "command": "abapFS-workspaces.addConnectionFolder",
+          "command": "abapFS-workspaces.editConnectionColor",
           "group": "inline@2",
           "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnection"
+        },
+        {
+          "command": "abapFS-workspaces.editConnectionBadge",
+          "group": "inline@3",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnection"
+        },
+        {
+          "command": "abapFS-workspaces.addConnectionFolder",
+          "group": "inline@4",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnection"
+        },
+        {
+          "command": "abapFS-workspaces.editConnectionColor",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnectionColor"
+        },
+        {
+          "command": "abapFS-workspaces.editConnectionBadge",
+          "group": "inline@1",
+          "when": "view == abapFsWorkspaces.workspaceManager && viewItem == managerConnectionBadge"
         },
         {
           "command": "abapFS-workspaces.removeConnectionFolder",
@@ -379,6 +414,62 @@
                     "default": "",
                     "description": "Workspace file name without extension. Defaults to the connection name."
                   },
+                  "color": {
+                    "type": "string",
+                    "default": "",
+                    "enum": [
+                      "",
+                      "charts.red",
+                      "charts.green",
+                      "charts.blue",
+                      "charts.yellow",
+                      "charts.orange",
+                      "charts.purple"
+                    ],
+                    "description": "Native decoration color preset for this connection in Explorer and editor tabs."
+                  },
+                  "badge": {
+                    "type": "string",
+                    "default": "",
+                    "enum": [
+                      "",
+                      "dot",
+                      "circle",
+                      "ring",
+                      "hollow-circle",
+                      "square",
+                      "hollow-square",
+                      "triangle",
+                      "hollow-triangle",
+                      "diamond",
+                      "hollow-diamond",
+                      "star",
+                      "hollow-star",
+                      "spark",
+                      "plus",
+                      "cross",
+                      "clover",
+                      "sun",
+                      "cloud",
+                      "flag",
+                      "bolt",
+                      "anchor",
+                      "rocket",
+                      "fire",
+                      "leaf",
+                      "bug",
+                      "gear",
+                      "lock",
+                      "key",
+                      "globe",
+                      "lightbulb",
+                      "hammer",
+                      "package",
+                      "pin",
+                      "shield"
+                    ],
+                    "description": "Native decoration icon preset for this connection in Explorer and editor tabs."
+                  },
                   "folders": {
                     "type": "array",
                     "default": [],
@@ -389,6 +480,66 @@
                   }
                 },
                 "additionalProperties": false
+              }
+            },
+            "workspaceColors": {
+              "type": "object",
+              "default": {},
+              "description": "Resolved per-workspace connection colors used for native ABAP FS decorations.",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "charts.red",
+                  "charts.green",
+                  "charts.blue",
+                  "charts.yellow",
+                  "charts.orange",
+                  "charts.purple"
+                ]
+              }
+            },
+            "workspaceBadges": {
+              "type": "object",
+              "default": {},
+              "description": "Resolved per-workspace connection icons used for native ABAP FS decorations.",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "dot",
+                  "circle",
+                  "ring",
+                  "hollow-circle",
+                  "square",
+                  "hollow-square",
+                  "triangle",
+                  "hollow-triangle",
+                  "diamond",
+                  "hollow-diamond",
+                  "star",
+                  "hollow-star",
+                  "spark",
+                  "plus",
+                  "cross",
+                  "clover",
+                  "sun",
+                  "cloud",
+                  "flag",
+                  "bolt",
+                  "anchor",
+                  "rocket",
+                  "fire",
+                  "leaf",
+                  "bug",
+                  "gear",
+                  "lock",
+                  "key",
+                  "globe",
+                  "lightbulb",
+                  "hammer",
+                  "package",
+                  "pin",
+                  "shield"
+                ]
               }
             },
             "workspaces": {
@@ -430,6 +581,68 @@
             }
           },
           "additionalProperties": false
+        },
+        "abapFsWorkspaces.workspaceColors": {
+          "type": "object",
+          "default": {},
+          "scope": "resource",
+          "description": "Per-workspace connection colors used by native Explorer and tab decorations.",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "charts.red",
+              "charts.green",
+              "charts.blue",
+              "charts.yellow",
+              "charts.orange",
+              "charts.purple"
+            ]
+          }
+        },
+        "abapFsWorkspaces.workspaceBadges": {
+          "type": "object",
+          "default": {},
+          "scope": "resource",
+          "description": "Per-workspace connection icons used by native Explorer and tab decorations.",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "dot",
+              "circle",
+              "ring",
+              "hollow-circle",
+              "square",
+              "hollow-square",
+              "triangle",
+              "hollow-triangle",
+              "diamond",
+              "hollow-diamond",
+              "star",
+              "hollow-star",
+              "spark",
+              "plus",
+              "cross",
+              "clover",
+              "sun",
+              "cloud",
+              "flag",
+              "bolt",
+              "anchor",
+              "rocket",
+              "fire",
+              "leaf",
+              "bug",
+              "gear",
+              "lock",
+              "key",
+              "globe",
+              "lightbulb",
+              "hammer",
+              "package",
+              "pin",
+              "shield"
+            ]
+          }
         }
       }
     }

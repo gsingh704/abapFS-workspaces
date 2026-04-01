@@ -12,6 +12,8 @@ This extension reads your configured `abapfs.remote` connections, generates stan
 - Lets you create custom workspaces that include multiple ABAP FS connections in one `.code-workspace` file.
 - Opens a connection workspace in the current window or a new window.
 - Lets you define a custom workspace file name per connection.
+- Lets you assign a color preset per connection for native Explorer and editor tab decorations.
+- Lets you assign an icon preset per connection for native Explorer and editor tab decorations.
 - Supports shared local folders included in every generated workspace.
 - Supports connection-specific local folders added only to selected workspaces.
 - Supports custom workspace-specific local folders for grouped workspaces.
@@ -73,12 +75,16 @@ This extension stores its settings in `abapFsWorkspaces.manager`.
 		"connections": {
 			"DEV100": {
 				"workspaceName": "DEV100",
+				"color": "charts.red",
+				"badge": "circle",
 				"folders": [
 					"C:\\Projects\\dev100-local"
 				]
 			},
 			"QAS200": {
 				"workspaceName": "QAS200",
+				"color": "charts.green",
+				"badge": "triangle",
 				"folders": []
 			}
 		},
@@ -105,10 +111,58 @@ This extension stores its settings in `abapFsWorkspaces.manager`.
 - `storagePath`: Absolute folder where generated `.code-workspace` files are written.
 - `globalFolders`: Local folders included in every generated workspace file.
 - `connections.<id>.workspaceName`: Optional workspace file name without the `.code-workspace` extension.
+- `connections.<id>.color`: Optional color preset used for native Explorer and editor tab decorations.
+- `connections.<id>.badge`: Optional icon preset used for native Explorer and editor tab decorations.
 - `connections.<id>.folders`: Local folders included only for that connection.
 - `workspaces[].workspaceName`: Required file name for a custom grouped workspace.
 - `workspaces[].connectionIds`: One or more ABAP FS connection IDs included in the grouped workspace.
 - `workspaces[].folders`: Local folders included only in that grouped workspace.
+
+Available color presets:
+
+- `charts.red`
+- `charts.green`
+- `charts.blue`
+- `charts.yellow`
+- `charts.orange`
+- `charts.purple`
+
+Available icon presets:
+
+- `dot` (`•`)
+- `circle` (`●`)
+- `ring` (`◉`)
+- `hollow-circle` (`○`)
+- `square` (`■`)
+- `hollow-square` (`□`)
+- `triangle` (`▲`)
+- `hollow-triangle` (`△`)
+- `diamond` (`◆`)
+- `hollow-diamond` (`◇`)
+- `star` (`★`)
+- `hollow-star` (`☆`)
+- `spark` (`✦`)
+- `plus` (`✚`)
+- `cross` (`✖`)
+- `clover` (`✤`)
+- `sun` (`☀`)
+- `cloud` (`☁`)
+- `flag` (`⚑`)
+- `bolt` (`⚡`)
+- `anchor` (`⚓`)
+- `rocket` (`🚀`)
+- `fire` (`🔥`)
+- `leaf` (`🍃`)
+- `bug` (`🐛`)
+- `gear` (`⚙️`)
+- `lock` (`🔒`)
+- `key` (`🔑`)
+- `globe` (`🌍`)
+- `lightbulb` (`💡`)
+- `hammer` (`🔨`)
+- `package` (`📦`)
+- `pin` (`📌`)
+- `shield` (`🛡️`)
 
 ## Generated Workspace Example
 
@@ -129,7 +183,17 @@ This extension stores its settings in `abapFsWorkspaces.manager`.
 		{
 			"path": "C:\\Projects\\cross-system-tools"
 		}
-	]
+	],
+	"settings": {
+		"abapFsWorkspaces.workspaceColors": {
+			"DEV100": "charts.red",
+			"QAS200": "charts.green"
+		},
+		"abapFsWorkspaces.workspaceBadges": {
+			"DEV100": "circle",
+			"QAS200": "triangle"
+		}
+	}
 }
 ```
 
@@ -138,6 +202,10 @@ This extension stores its settings in `abapFsWorkspaces.manager`.
 - Duplicate local folders are automatically removed when a workspace file is generated.
 - Workspace file names must be unique across connections.
 - Invalid or non-existent folder paths are rejected during validation.
+- Native VS Code decorations can color Explorer items and tab labels, but not per-connection tab-bar backgrounds.
+- Native file-decoration badges support text glyphs, not VS Code theme icons or arbitrary custom icons.
+- Emoji badges are supported, but many Windows emoji fonts render in their own colors and may not fully adopt the selected connection color.
+- Native VS Code Explorer indent guide colors are theme-level, so they cannot be changed per connection.
 
 ## License
 

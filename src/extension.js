@@ -1,4 +1,5 @@
 const vscode = require('vscode');
+const { registerConnectionDecorations } = require('./connectionDecorations');
 const {
   initializeWorkspaceManager,
   createWorkspaceListProvider,
@@ -19,6 +20,8 @@ const {
   addCustomWorkspaceFolder,
   removeCustomWorkspaceFolder,
   editConnectionWorkspaceName,
+  editConnectionColor,
+  editConnectionBadge,
   addConnectionFolder,
   removeConnectionFolder,
   openConnectionWorkspace,
@@ -44,6 +47,7 @@ const updateAbapFsCommandContext = async () => {
  */
 function activate(context) {
   initializeWorkspaceManager(context.extensionUri);
+  registerConnectionDecorations(context);
   const workspaceListProvider = createWorkspaceListProvider();
   const workspaceManagerProvider = createWorkspaceManagerProvider();
   const workspaceManagerTreeView = vscode.window.createTreeView('abapFsWorkspaces.workspaceManager', {
@@ -103,6 +107,8 @@ function activate(context) {
       `${EXTENSION_PREFIX}.editConnectionWorkspaceName`,
       item => editConnectionWorkspaceName(item)
     ),
+    vscode.commands.registerCommand(`${EXTENSION_PREFIX}.editConnectionColor`, item => editConnectionColor(item)),
+    vscode.commands.registerCommand(`${EXTENSION_PREFIX}.editConnectionBadge`, item => editConnectionBadge(item)),
     vscode.commands.registerCommand(`${EXTENSION_PREFIX}.addConnectionFolder`, item => addConnectionFolder(item)),
     vscode.commands.registerCommand(`${EXTENSION_PREFIX}.removeConnectionFolder`, item => removeConnectionFolder(item)),
     vscode.commands.registerCommand(`${EXTENSION_PREFIX}.openConnectionWorkspace`, item => openConnectionWorkspace(item)),

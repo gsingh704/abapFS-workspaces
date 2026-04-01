@@ -1,9 +1,22 @@
 const path = require('path');
 const { homedir } = require('os');
 const vscode = require('vscode');
+const {
+  CONFIG_ROOT,
+  WORKSPACE_COLORS_KEY,
+  WORKSPACE_BADGES_KEY,
+  CONNECTION_COLOR_PRESETS,
+  CONNECTION_BADGE_PRESETS,
+  normalizeConnectionColor,
+  getConnectionColorLabel,
+  normalizeWorkspaceColorMap,
+  normalizeConnectionBadge,
+  getConnectionBadgeLabel,
+  getConnectionBadgeSymbol,
+  normalizeWorkspaceBadgeMap
+} = require('./connectionColors');
 
 const EXTENSION_PREFIX = 'abapFS-workspaces';
-const CONFIG_ROOT = 'abapFsWorkspaces';
 const WORKSPACE_MANAGER_KEY = 'manager';
 const LEGACY_CONFIG_ROOT = 'abapfs';
 const LEGACY_WORKSPACE_MANAGER_KEY = 'workspaceManager';
@@ -14,10 +27,48 @@ const CUSTOM_WORKSPACE_ID_PREFIX = 'workspace';
 
 const formatKey = raw => String(raw || '').toLowerCase();
 const normalizeFsPath = value => path.normalize(String(value || '').trim());
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
 let workspaceListProvider;
 let workspaceManagerProvider;
 let workspaceManagerTreeView;
+
+const normalizeManagedConnectionSettings = value => {
+  const normalizedName = typeof value?.workspaceName === 'string'
+    ? value.workspaceName.trim()
+    : '';
+
+  return {
+    workspaceName: normalizedName || undefined,
+    folders: normalizePathList(value?.folders),
+    color: normalizeConnectionColor(value?.color) || undefined,
+    badge: normalizeConnectionBadge(value?.badge) || undefined
+  };
+};
+
+const getManagedConnectionSettings = (settings, connectionId) =>
+  normalizeManagedConnectionSettings(settings.connections?.[connectionId]);
+
+const setManagedConnectionSettings = (settings, connectionId, overrides = {}) => {
+  const current = getManagedConnectionSettings(settings, connectionId);
+  settings.connections[connectionId] = normalizeManagedConnectionSettings({
+    workspaceName: hasOwn(overrides, 'workspaceName') ? overrides.workspaceName : current.workspaceName,
+    folders: hasOwn(overrides, 'folders') ? overrides.folders : current.folders,
+    color: hasOwn(overrides, 'color') ? overrides.color : current.color,
+    badge: hasOwn(overrides, 'badge') ? overrides.badge : current.badge
+  });
+};
+
+const buildConnectionSettingMap = (connectionIds, settings, selector, normalizer) => {
+  return normalizer(connectionIds.reduce((result, connectionId) => {
+    const value = selector(getManagedConnectionSettings(settings, connectionId));
+    if (value) {
+      result[connectionId] = value;
+    }
+
+    return result;
+  }, {}));
+};
 
 const normalizePathList = value => {
   if (!Array.isArray(value)) {
@@ -127,14 +178,7 @@ const normalizeWorkspaceSettings = value => {
     : {};
 
   const connections = Object.entries(sourceConnections).reduce((result, [connectionId, connectionValue]) => {
-    const normalizedName = typeof connectionValue?.workspaceName === 'string'
-      ? connectionValue.workspaceName.trim()
-      : '';
-
-    result[connectionId] = {
-      workspaceName: normalizedName || undefined,
-      folders: normalizePathList(connectionValue?.folders)
-    };
+    result[connectionId] = normalizeManagedConnectionSettings(connectionValue);
 
     return result;
   }, {});
@@ -197,7 +241,28 @@ const getAvailableConnections = () => {
 };
 
 const getWorkspaceName = (connectionId, settings) =>
-  settings.connections?.[connectionId]?.workspaceName?.trim() || connectionId;
+  getManagedConnectionSettings(settings, connectionId).workspaceName || connectionId;
+
+const getConnectionColor = (connectionId, settings) =>
+  getManagedConnectionSettings(settings, connectionId).color;
+
+const getConnectionBadge = (connectionId, settings) =>
+  getManagedConnectionSettings(settings, connectionId).badge;
+
+const appendConnectionBadge = (value, badgeId) => {
+  const text = String(value || '');
+  const badgeSymbol = getConnectionBadgeSymbol(badgeId);
+  if (!badgeSymbol || !text) {
+    return text;
+  }
+
+  return `${text} ${badgeSymbol}`;
+};
+
+const createConnectionThemeIcon = (iconId, colorId) => new vscode.ThemeIcon(
+  iconId,
+  colorId ? new vscode.ThemeColor(colorId) : undefined
+);
 
 const getCustomWorkspaceName = workspace => workspace?.workspaceName?.trim() || '';
 
@@ -223,6 +288,8 @@ const buildConnectionWorkspaceEntry = (connection, settings) => ({
   workspaceName: getWorkspaceName(connection.id, settings),
   connectionIds: [connection.id],
   folders: settings.connections?.[connection.id]?.folders || [],
+  color: getConnectionColor(connection.id, settings),
+  badge: getConnectionBadge(connection.id, settings),
   client: connection.remote?.client || '',
   target: connection.target,
   url: connection.remote?.url || ''
@@ -364,10 +431,22 @@ const validateWorkspaceManagerState = async (settings, connections) => {
 const buildWorkspacePayload = (workspaceEntry, settings) => {
   const globalFolders = settings.globalFolders || [];
   const localFolders = [...globalFolders, ...(workspaceEntry.folders || [])];
+  const workspaceColors = buildConnectionSettingMap(
+    workspaceEntry.connectionIds || [],
+    settings,
+    connection => connection.color,
+    normalizeWorkspaceColorMap
+  );
+  const workspaceBadges = buildConnectionSettingMap(
+    workspaceEntry.connectionIds || [],
+    settings,
+    connection => connection.badge,
+    normalizeWorkspaceBadgeMap
+  );
   const seen = new Set();
   const seenConnections = new Set();
 
-  return {
+  const payload = {
     folders: [
       ...(workspaceEntry.connectionIds || []).reduce((result, connectionId) => {
         const key = formatKey(connectionId);
@@ -394,6 +473,20 @@ const buildWorkspacePayload = (workspaceEntry, settings) => {
       }, [])
     ]
   };
+
+  if (Object.keys(workspaceColors).length > 0 || Object.keys(workspaceBadges).length > 0) {
+    payload.settings = {};
+  }
+
+  if (Object.keys(workspaceColors).length > 0) {
+    payload.settings[`${CONFIG_ROOT}.${WORKSPACE_COLORS_KEY}`] = workspaceColors;
+  }
+
+  if (Object.keys(workspaceBadges).length > 0) {
+    payload.settings[`${CONFIG_ROOT}.${WORKSPACE_BADGES_KEY}`] = workspaceBadges;
+  }
+
+  return payload;
 };
 
 const writeWorkspaceFile = async (workspaceEntry, settings) => {
@@ -443,7 +536,11 @@ const buildViewState = async (settings = getWorkspaceManagerSettings()) => {
       target: connection.target,
       url: connection.remote?.url || '',
       workspaceName: getWorkspaceName(connection.id, settings),
-      folders: settings.connections?.[connection.id]?.folders || [],
+      folders: getManagedConnectionSettings(settings, connection.id).folders,
+      color: getConnectionColor(connection.id, settings),
+      colorLabel: getConnectionColorLabel(getConnectionColor(connection.id, settings)),
+      badge: getConnectionBadge(connection.id, settings),
+      badgeLabel: getConnectionBadgeLabel(getConnectionBadge(connection.id, settings)),
       filePath,
       exists: filePath ? await pathExists(filePath) : false,
       isCurrentWorkspace: !!normalizedCurrentWorkspaceFile && normalizedCurrentWorkspaceFile === normalizedFilePath
@@ -481,26 +578,35 @@ const buildViewState = async (settings = getWorkspaceManagerSettings()) => {
 
 class WorkspaceListItem extends vscode.TreeItem {
   constructor(workspaceEntry) {
-    super(workspaceEntry.workspaceName || workspaceEntry.id, vscode.TreeItemCollapsibleState.None);
+    super(
+      workspaceEntry.kind === 'connection'
+        ? workspaceEntry.workspaceName || workspaceEntry.id
+        : workspaceEntry.workspaceName || workspaceEntry.id,
+      vscode.TreeItemCollapsibleState.None
+    );
     this.workspaceKind = workspaceEntry.kind;
     this.connectionId = workspaceEntry.kind === 'connection' ? workspaceEntry.id : undefined;
     this.workspaceId = workspaceEntry.kind === 'workspace' ? workspaceEntry.id : undefined;
     this.description = workspaceEntry.exists
       ? workspaceEntry.kind === 'workspace'
         ? `${workspaceEntry.connectionIds.length} connection(s)${workspaceEntry.isCurrentWorkspace ? ' • current' : ''}`
-        : `${workspaceEntry.client || ''}${workspaceEntry.isCurrentWorkspace ? ' • current' : ''}`
+        : appendConnectionBadge(
+          `${workspaceEntry.client || ''}${workspaceEntry.isCurrentWorkspace ? ' • current' : ''}`,
+          workspaceEntry.badge
+        )
       : 'not generated';
     this.tooltip = workspaceEntry.kind === 'workspace'
       ? `${workspaceEntry.connectionIds.join(', ') || 'No connections selected'}\n${workspaceEntry.filePath || 'No workspace file path configured'}`
       : `${workspaceEntry.id}\n${workspaceEntry.filePath || 'No workspace file path configured'}`;
     this.contextValue = 'workspaceConnection';
     this.iconPath = workspaceEntry.exists
-      ? new vscode.ThemeIcon(
+      ? createConnectionThemeIcon(
         workspaceEntry.isCurrentWorkspace
           ? 'folder-active'
           : workspaceEntry.kind === 'workspace'
             ? 'folder-library'
-            : 'database'
+            : 'database',
+        workspaceEntry.kind === 'connection' ? workspaceEntry.color : undefined
       )
       : new vscode.ThemeIcon('warning');
     this.command = {
@@ -630,15 +736,16 @@ const createFolderNode = ({ scope, ownerId, folderPath }) => createNode({
 });
 
 const createWorkspaceMemberNode = ({ workspaceId, connectionId, state }) => {
-  const connection = state.availableConnections.find(entry => formatKey(entry.id) === formatKey(connectionId));
+  const connection = state.connections.find(entry => formatKey(entry.id) === formatKey(connectionId))
+    || state.availableConnections.find(entry => formatKey(entry.id) === formatKey(connectionId));
   const details = [connection?.client || '', connection?.url || ''].filter(Boolean).join(' / ');
   return createNode({
     id: `workspace-connection:${workspaceId}:${formatKey(connectionId)}`,
     label: connectionId,
-    description: details,
+    description: appendConnectionBadge(details, connection?.badge),
     tooltip: details || connectionId,
     contextValue: 'managerCustomWorkspaceConnection',
-    iconPath: new vscode.ThemeIcon('plug'),
+    iconPath: createConnectionThemeIcon('plug', connection?.color),
     nodeType: 'workspaceConnection',
     workspaceId,
     connectionId
@@ -648,20 +755,60 @@ const createWorkspaceMemberNode = ({ workspaceId, connectionId, state }) => {
 const createConnectionNode = connection => createNode({
   id: `connection:${connection.id}`,
   label: connection.id,
-  description: [connection.client || '', connection.target === 'user' ? 'user' : 'workspace']
-    .filter(Boolean)
-    .join(' / '),
+  description: appendConnectionBadge(
+    [connection.client || '', connection.target === 'user' ? 'user' : 'workspace']
+      .filter(Boolean)
+      .join(' / '),
+    connection.badge
+  ),
   tooltip: `${connection.url || connection.id}\n${connection.filePath || 'No workspace file path configured'}`,
   contextValue: 'managerConnection',
-  iconPath: new vscode.ThemeIcon(
+  iconPath: createConnectionThemeIcon(
     connection.isCurrentWorkspace
       ? 'folder-active'
       : connection.target === 'user'
         ? 'database'
-        : 'warning'
+        : 'warning',
+    connection.color
   ),
   collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
   nodeType: 'connection',
+  connectionId: connection.id
+});
+
+const createConnectionColorNode = connection => createNode({
+  id: `connection-color:${connection.id}`,
+  label: 'Color',
+  description: connection.colorLabel,
+  tooltip: connection.color
+    ? `Native decoration color: ${connection.colorLabel}`
+    : 'Choose a native decoration color for this connection.',
+  contextValue: 'managerConnectionColor',
+  iconPath: new vscode.ThemeIcon('symbol-color'),
+  command: {
+    command: `${EXTENSION_PREFIX}.editConnectionColor`,
+    title: 'Edit Connection Color',
+    arguments: [{ connectionId: connection.id }]
+  },
+  nodeType: 'connectionColor',
+  connectionId: connection.id
+});
+
+const createConnectionBadgeNode = connection => createNode({
+  id: `connection-badge:${connection.id}`,
+  label: 'Icon',
+  description: connection.badgeLabel,
+  tooltip: connection.badge
+    ? `Native decoration icon: ${connection.badgeLabel}`
+    : 'Choose a native decoration icon for this connection.',
+  contextValue: 'managerConnectionBadge',
+  iconPath: new vscode.ThemeIcon('symbol-misc'),
+  command: {
+    command: `${EXTENSION_PREFIX}.editConnectionBadge`,
+    title: 'Edit Connection Icon',
+    arguments: [{ connectionId: connection.id }]
+  },
+  nodeType: 'connectionBadge',
   connectionId: connection.id
 });
 
@@ -784,6 +931,8 @@ class WorkspaceManagerProvider {
           nodeType: 'connectionWorkspaceName',
           connectionId: connection.id
         }),
+        createConnectionColorNode(connection),
+        createConnectionBadgeNode(connection),
         createWorkspaceFileNode({ kind: 'connection', ...connection })
       ];
 
@@ -1056,6 +1205,51 @@ const showConnectionQuickPick = async (selectedConnectionIds = []) => {
   return vscode.window.showQuickPick(items, {
     title: 'Add ABAP connection',
     placeHolder: 'Select a connection to include in the grouped workspace',
+    ignoreFocusOut: true
+  });
+};
+
+const showConnectionColorQuickPick = async currentColorId => {
+  const items = [
+    {
+      label: 'No color',
+      description: 'Clear the connection decoration color',
+      colorId: ''
+    },
+    ...CONNECTION_COLOR_PRESETS.map(color => ({
+      label: color.label,
+      description: color.description,
+      detail: color.id,
+      colorId: color.id,
+      picked: color.id === currentColorId
+    }))
+  ];
+
+  return vscode.window.showQuickPick(items, {
+    title: 'Select connection color',
+    placeHolder: 'Choose a native decoration color for this connection',
+    ignoreFocusOut: true
+  });
+};
+
+const showConnectionBadgeQuickPick = async currentBadgeId => {
+  const items = [
+    {
+      label: 'No icon',
+      description: 'Clear the connection decoration icon',
+      badgeId: ''
+    },
+    ...CONNECTION_BADGE_PRESETS.map(badge => ({
+      label: `${badge.symbol}  ${badge.label}`,
+      description: badge.id,
+      badgeId: badge.id,
+      picked: badge.id === currentBadgeId
+    }))
+  ];
+
+  return vscode.window.showQuickPick(items, {
+    title: 'Select connection icon',
+    placeHolder: 'Choose a native decoration icon for this connection',
     ignoreFocusOut: true
   });
 };
@@ -1335,11 +1529,50 @@ const editConnectionWorkspaceName = async item => {
   }
 
   await withWorkspaceManagerMutation(nextSettings => {
-    nextSettings.connections[connectionId] = {
-      workspaceName: workspaceName.trim() || undefined,
-      folders: nextSettings.connections?.[connectionId]?.folders || []
-    };
+    setManagedConnectionSettings(nextSettings, connectionId, {
+      workspaceName
+    });
   }, 'Updated connection workspace name');
+};
+
+const editConnectionColor = async item => {
+  const connectionId = extractConnectionId(item);
+  if (!connectionId) {
+    return;
+  }
+
+  const settings = getWorkspaceManagerSettings();
+  const currentColor = normalizeConnectionColor(settings.connections?.[connectionId]?.color);
+  const selectedColor = await showConnectionColorQuickPick(currentColor);
+  if (!selectedColor) {
+    return;
+  }
+
+  await withWorkspaceManagerMutation(nextSettings => {
+    setManagedConnectionSettings(nextSettings, connectionId, {
+      color: selectedColor.colorId
+    });
+  }, 'Updated connection color');
+};
+
+const editConnectionBadge = async item => {
+  const connectionId = extractConnectionId(item);
+  if (!connectionId) {
+    return;
+  }
+
+  const settings = getWorkspaceManagerSettings();
+  const currentBadge = normalizeConnectionBadge(settings.connections?.[connectionId]?.badge);
+  const selectedBadge = await showConnectionBadgeQuickPick(currentBadge);
+  if (!selectedBadge) {
+    return;
+  }
+
+  await withWorkspaceManagerMutation(nextSettings => {
+    setManagedConnectionSettings(nextSettings, connectionId, {
+      badge: selectedBadge.badgeId
+    });
+  }, 'Updated connection icon');
 };
 
 const addConnectionFolder = async item => {
@@ -1354,11 +1587,10 @@ const addConnectionFolder = async item => {
   }
 
   await withWorkspaceManagerMutation(settings => {
-    const current = settings.connections?.[connectionId] || { workspaceName: undefined, folders: [] };
-    settings.connections[connectionId] = {
-      workspaceName: current.workspaceName,
-      folders: normalizePathList([...(current.folders || []), folderPath])
-    };
+    const current = getManagedConnectionSettings(settings, connectionId);
+    setManagedConnectionSettings(settings, connectionId, {
+      folders: [...current.folders, folderPath]
+    });
   }, 'Added connection folder');
 };
 
@@ -1369,16 +1601,12 @@ const removeConnectionFolder = async item => {
   }
 
   await withWorkspaceManagerMutation(settings => {
-    const current = settings.connections?.[connectionId];
-    if (!current) {
-      return false;
-    }
+    const current = getManagedConnectionSettings(settings, connectionId);
 
     const folderKey = item.folderPath.toLowerCase();
-    settings.connections[connectionId] = {
-      workspaceName: current.workspaceName,
-      folders: (current.folders || []).filter(folder => folder.toLowerCase() !== folderKey)
-    };
+    setManagedConnectionSettings(settings, connectionId, {
+      folders: current.folders.filter(folder => folder.toLowerCase() !== folderKey)
+    });
     return true;
   }, 'Removed connection folder');
 };
@@ -1462,6 +1690,8 @@ module.exports = {
   addCustomWorkspaceFolder,
   removeCustomWorkspaceFolder,
   editConnectionWorkspaceName,
+  editConnectionColor,
+  editConnectionBadge,
   addConnectionFolder,
   removeConnectionFolder,
   openConnectionWorkspace,
