@@ -249,14 +249,14 @@ const getConnectionColor = (connectionId, settings) =>
 const getConnectionBadge = (connectionId, settings) =>
   getManagedConnectionSettings(settings, connectionId).badge;
 
-const appendConnectionBadge = (value, badgeId) => {
-  const text = String(value || '');
+const getConnectionBadgeText = badgeId => {
   const badgeSymbol = getConnectionBadgeSymbol(badgeId);
-  if (!badgeSymbol || !text) {
-    return text;
-  }
+  return badgeSymbol ? ` ${badgeSymbol}` : '';
+};
 
-  return `${text} ${badgeSymbol}`;
+const createConnectionDescription = (parts, badgeId, suffix = '') => {
+  const details = parts.filter(Boolean).join(' / ');
+  return `${details}${getConnectionBadgeText(badgeId)}${suffix}`.trim();
 };
 
 const createConnectionThemeIcon = (iconId, colorId) => new vscode.ThemeIcon(
@@ -578,21 +578,17 @@ const buildViewState = async (settings = getWorkspaceManagerSettings()) => {
 
 class WorkspaceListItem extends vscode.TreeItem {
   constructor(workspaceEntry) {
-    super(
-      workspaceEntry.kind === 'connection'
-        ? workspaceEntry.workspaceName || workspaceEntry.id
-        : workspaceEntry.workspaceName || workspaceEntry.id,
-      vscode.TreeItemCollapsibleState.None
-    );
+    super(workspaceEntry.workspaceName || workspaceEntry.id, vscode.TreeItemCollapsibleState.None);
     this.workspaceKind = workspaceEntry.kind;
     this.connectionId = workspaceEntry.kind === 'connection' ? workspaceEntry.id : undefined;
     this.workspaceId = workspaceEntry.kind === 'workspace' ? workspaceEntry.id : undefined;
     this.description = workspaceEntry.exists
       ? workspaceEntry.kind === 'workspace'
         ? `${workspaceEntry.connectionIds.length} connection(s)${workspaceEntry.isCurrentWorkspace ? ' • current' : ''}`
-        : appendConnectionBadge(
-          `${workspaceEntry.client || ''}${workspaceEntry.isCurrentWorkspace ? ' • current' : ''}`,
-          workspaceEntry.badge
+        : createConnectionDescription(
+          [workspaceEntry.client || ''],
+          workspaceEntry.badge,
+          workspaceEntry.isCurrentWorkspace ? ' • current' : ''
         )
       : 'not generated';
     this.tooltip = workspaceEntry.kind === 'workspace'
@@ -742,7 +738,7 @@ const createWorkspaceMemberNode = ({ workspaceId, connectionId, state }) => {
   return createNode({
     id: `workspace-connection:${workspaceId}:${formatKey(connectionId)}`,
     label: connectionId,
-    description: appendConnectionBadge(details, connection?.badge),
+    description: createConnectionDescription([details], connection?.badge),
     tooltip: details || connectionId,
     contextValue: 'managerCustomWorkspaceConnection',
     iconPath: createConnectionThemeIcon('plug', connection?.color),
@@ -755,10 +751,8 @@ const createWorkspaceMemberNode = ({ workspaceId, connectionId, state }) => {
 const createConnectionNode = connection => createNode({
   id: `connection:${connection.id}`,
   label: connection.id,
-  description: appendConnectionBadge(
-    [connection.client || '', connection.target === 'user' ? 'user' : 'workspace']
-      .filter(Boolean)
-      .join(' / '),
+  description: createConnectionDescription(
+    [connection.client || '', connection.target === 'user' ? 'user' : 'workspace'],
     connection.badge
   ),
   tooltip: `${connection.url || connection.id}\n${connection.filePath || 'No workspace file path configured'}`,

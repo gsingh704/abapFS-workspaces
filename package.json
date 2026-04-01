@@ -2,7 +2,7 @@
   "name": "abapfs-workspaces",
   "displayName": "ABAP FS Workspaces",
   "description": "Manage Remote ABAP connections as Workspaces",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "gsingh704",
   "engines": {
     "vscode": "^1.80.0"

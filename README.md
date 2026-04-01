@@ -4,6 +4,11 @@ Manage Remote ABAP connections as reusable VS Code workspaces.
 
 This extension reads your configured `abapfs.remote` connections, generates standalone `.code-workspace` files, and gives you native VS Code sidebar views to open, refresh, and maintain them.
 
+## Screenshot
+
+![alt text](media/image.png)
+![alt text](media/2.png)
+
 ## Features
 
 - Shows all detected ABAP Remote FS connections in a dedicated Activity Bar view.
@@ -31,35 +36,12 @@ Each generated workspace includes:
 
 This makes it easy to keep one VS Code workspace per SAP system or client, while still attaching related local project folders.
 
-## Requirements
-
-- VS Code `1.80.0` or newer.
-- The ABAP Remote FS extension installed and configured.
-- Connections defined in `abapfs.remote`.
-
-Important limitation:
-
-- Connections must be stored in user settings, not workspace settings, before this extension will generate standalone workspace files for them.
-
-## Usage
-
 1. Configure your ABAP connections in `abapfs.remote`.
 2. Open the `ABAP FS Workspaces` container from the Activity Bar.
 3. Use the `Workspace Manager` sidebar view to choose a save location, add global folders, configure per-connection names and folders, and manage grouped workspaces.
 4. Use the inline actions or context menu on tree items to edit names, add folders, and manage grouped workspace connections.
 5. Run `Generate Or Regenerate Workspaces` from the view title bar when you want to write or refresh the `.code-workspace` files.
 6. Open a generated workspace from either the `Workspace Manager` or `Generated Workspaces` view.
-
-## Commands
-
-The extension contributes these commands:
-
-- `ABAP FS Workspaces: Workspace Manager`
-- `ABAP FS Workspaces: Open ABAP FS Connection Manager`
-- `ABAP FS Workspaces: Refresh Workspace List`
-- `ABAP FS Workspaces: Open Connection Workspace`
-- `ABAP FS Workspaces: Open Connection Workspace In New Window`
-- `ABAP FS Workspaces: Edit Connection Workspace File`
 
 ## Configuration
 
@@ -202,11 +184,3 @@ Available icon presets:
 - Duplicate local folders are automatically removed when a workspace file is generated.
 - Workspace file names must be unique across connections.
 - Invalid or non-existent folder paths are rejected during validation.
-- Native VS Code decorations can color Explorer items and tab labels, but not per-connection tab-bar backgrounds.
-- Native file-decoration badges support text glyphs, not VS Code theme icons or arbitrary custom icons.
-- Emoji badges are supported, but many Windows emoji fonts render in their own colors and may not fully adopt the selected connection color.
-- Native VS Code Explorer indent guide colors are theme-level, so they cannot be changed per connection.
-
-## License
-
-MIT
